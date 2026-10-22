@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestimo, le jeu de mots et de gestes</title>
+<meta name="description" content="Le jeu de soirée où deux équipes font deviner les mêmes mots en trois actes : description, un seul mot, puis geste.">
+<meta name="theme-color" content="#2b1217">
+<meta property="og:title" content="Gestimo, le jeu de mots et de gestes">
+<meta property="og:description" content="Le jeu de soirée où deux équipes font deviner les mêmes mots en trois actes : description, un seul mot, puis geste.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23b32129'/%3E%3Ctext x='32' y='47' font-size='42' text-anchor='middle' font-family='Marker Felt,cursive' font-weight='700' fill='%23f6efe0'%3EG%3C/text%3E%3C/svg%3E">
+<style>
+:root {
+  --bordeaux: #2b1217;
+  --velours: #b32129;
+  --velours-sombre: #7a121a;
+  --creme: #f6efe0;
+  --encre: #1f0d0a;
+  --or: #e0b04a;
+  --feutre: "Marker Felt", "Chalkboard SE", "Segoe Print", "Bradley Hand", cursive;
+  --texte: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--bordeaux); }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--creme);
+  font: 17px/1.6 var(--texte);
+  -webkit-text-size-adjust: 100%;
+  background:
+    radial-gradient(ellipse 90% 560px at 50% 0, rgba(224, 176, 74, .26), rgba(246, 239, 224, .05) 55%, transparent 80%) no-repeat,
+    var(--bordeaux);
+}
+a { color: var(--or); text-underline-offset: 3px; }
+a:focus-visible, summary:focus-visible { outline: 3px solid var(--or); outline-offset: 3px; border-radius: 4px; }
+.fiche a { color: var(--velours); }
+.fiche a:focus-visible, .fiche summary:focus-visible { outline-color: var(--velours); }
+
+/* Le décor : rideaux sur les côtés, lambrequin en haut, planches en bas */
+.rideau {
+  position: fixed; top: 0; bottom: 0; width: 18px; z-index: 2; pointer-events: none;
+  background: repeating-linear-gradient(90deg, var(--velours-sombre) 0 5px, var(--velours) 5px 10px);
+}
+.rideau-g { left: 0; border-right: 2px solid var(--or); }
+.rideau-d { right: 0; border-left: 2px solid var(--or); }
+.lambrequin { display: block; width: 100%; height: 64px; }
+.scene { max-width: 680px; margin: 0 auto; padding: 0 44px; }
+
+/* L'affiche de l'accueil, comme dans l'appli */
+.affiche-zone { text-align: center; padding: 20px 0 4px; }
+.surtitre { font: 700 22px/1.2 var(--feutre); color: var(--or); margin: 0 0 34px; }
+.pile { position: relative; width: 260px; height: 230px; margin: 0 auto 40px; }
+.pile::before {
+  content: ""; position: absolute; inset: 0;
+  background: #d6c29e; border: 2px solid var(--encre); border-radius: 6px;
+  transform: translate(-14px, 6px) rotate(-7deg);
+}
+.affiche {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: var(--creme); color: var(--encre);
+  border: 2.5px solid var(--encre); border-radius: 6px;
+  box-shadow: 4px 6px 0 rgba(0, 0, 0, .5);
+  transform: rotate(3deg);
+}
+.affiche::before {
+  content: ""; position: absolute; inset: 8px; pointer-events: none;
+  border: 1.5px solid var(--velours); border-radius: 3px;
+}
+.punaise {
+  position: absolute; top: -7px; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--or); border: 2px solid var(--encre);
+}
+.punaise-g { left: 16px; }
+.punaise-d { right: 16px; }
+.ce-soir { font: 700 18px/1 var(--feutre); color: var(--velours); }
+.titre { margin: 0; display: flex; align-items: flex-end; font: 700 48px/1 var(--feutre); color: var(--velours); }
+.titre span { display: inline-block; text-shadow: 2.5px 3px 0 var(--encre); }
+.titre span:nth-child(1) { font-size: 60px; transform: rotate(-6deg); }
+.titre span:nth-child(2) { transform: rotate(3deg); }
+.titre span:nth-child(3) { transform: rotate(-2deg); }
+.titre span:nth-child(4) { transform: rotate(4deg); }
+.titre span:nth-child(5) { transform: rotate(-3deg); }
+.titre span:nth-child(6) { transform: rotate(2deg); }
+.titre span:nth-child(7) { transform: rotate(-4deg); }
+.ruban {
+  font: 700 18px/1.3 var(--feutre); color: var(--creme); background: var(--velours);
+  padding: 6px 28px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%, 10px 50%);
+}
+.entree { font: 700 14px/1 var(--feutre); color: rgba(31, 13, 10, .65); }
+.actes-ligne { font: 700 22px/1.3 var(--feutre); margin: 0 0 14px; }
+.accroche { max-width: 30em; margin: 0 auto 30px; font-size: 19px; color: rgba(246, 239, 224, .85); }
+.bouton-or {
+  display: inline-block; font: 700 22px/1.2 var(--feutre); color: var(--encre); text-decoration: none;
+  background: var(--or); border: 3px solid var(--encre); border-radius: 999px;
+  padding: 12px 34px; box-shadow: 3px 5px 0 rgba(0, 0, 0, .5);
+}
+a.bouton-or:active { transform: translate(2px, 3px); box-shadow: 1px 2px 0 rgba(0, 0, 0, .5); }
+.bientot { cursor: default; }
+
+/* Les titres de section, écrits au feutre sur la scène */
+.scene > h2, .bloc > h2 {
+  font: 700 30px/1.2 var(--feutre); color: var(--creme);
+  text-shadow: 2px 3px 0 var(--encre); margin: 72px 0 8px;
+}
+.intro { color: rgba(246, 239, 224, .82); margin: 0 0 26px; }
+
+/* Les tickets des actes, bordés de la couleur de chaque acte */
+.actes { list-style: none; padding: 0; margin: 0; display: grid; gap: 18px; }
+.ticket {
+  position: relative; display: grid; grid-template-columns: 64px 1fr; gap: 2px 18px;
+  padding: 18px 24px; background: var(--creme); color: var(--encre);
+  border: 2.5px solid var(--encre); border-radius: 8px; box-shadow: 3px 5px 0 rgba(0, 0, 0, .45);
+}
+.ticket::after {
+  content: ""; position: absolute; inset: 6px; pointer-events: none;
+  border: 1.5px dashed var(--c); border-radius: 5px;
+}
+.ticket:nth-child(odd) { transform: rotate(-.6deg); }
+.ticket:nth-child(even) { transform: rotate(.6deg); }
+.numero { grid-row: span 2; font: 700 34px/1 var(--feutre); color: var(--c); text-align: center; padding-top: 4px; }
+.ticket h3 { margin: 0; font: 700 22px/1.25 var(--feutre); color: var(--c); }
+.ticket p { margin: 0; }
+.acte-1 { --c: #b32129; }
+.acte-2 { --c: #29614d; }
+.acte-3 { --c: #2e4580; }
+.acte-4 { --c: #732e6b; }
+
+/* Les fiches en papier crème */
+.fiche {
+  background: var(--creme); color: var(--encre);
+  border: 2.5px solid var(--encre); border-radius: 8px; box-shadow: 3px 5px 0 rgba(0, 0, 0, .45);
+  padding: 26px 30px; transform: rotate(-.4deg);
+}
+.fiche + .fiche { margin-top: 28px; transform: rotate(.4deg); }
+.programme { list-style: none; margin: 0; padding: 0; }
+.programme li { position: relative; padding: 12px 0 12px 30px; }
+.programme li + li { border-top: 1px dashed rgba(31, 13, 10, .3); }
+.programme li::before { content: "★"; position: absolute; left: 2px; top: 12px; color: var(--velours); }
+.fiche h2 { font: 700 24px/1.25 var(--feutre); color: var(--velours); margin: 34px 0 8px; }
+.fiche h2:first-child { margin-top: 0; }
+.fiche p { margin: 0 0 12px; }
+.fiche ul.puces { margin: 0 0 12px; padding-left: 22px; }
+.fiche ul.puces li { margin: 4px 0; }
+.fiche dl { margin: 0; }
+.fiche dt { font: 700 18px/1.3 var(--feutre); color: var(--velours); margin-top: 18px; }
+.fiche dt:first-child { margin-top: 0; }
+.fiche dd { margin: 2px 0 0; }
+.en-bref { font-size: 19px; }
+.a-completer {
+  color: var(--velours); background: #f9eeda; border: 1px dashed var(--velours);
+  border-radius: 4px; padding: 0 6px;
+}
+
+/* Questions fréquentes : on touche une question pour lire la réponse */
+.faq details + details { border-top: 1px dashed rgba(31, 13, 10, .3); }
+.faq summary {
+  display: flex; justify-content: space-between; gap: 16px; align-items: baseline;
+  cursor: pointer; list-style: none; padding: 14px 0;
+  font: 700 19px/1.35 var(--feutre); color: var(--encre);
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--velours); font-size: 26px; line-height: 1; }
+.faq details[open] summary::after { content: "−"; }
+.faq details p { margin: 0 0 16px; }
+
+/* En-tête des pages intérieures */
+.entete { text-align: center; padding: 6px 0 0; }
+.retour {
+  display: inline-block; font: 700 30px/1 var(--feutre); color: var(--velours); text-decoration: none;
+  background: var(--creme); border: 3px solid var(--velours); border-radius: 6px;
+  padding: 10px 26px; box-shadow: 3px 4px 0 rgba(0, 0, 0, .45); transform: rotate(-2deg);
+}
+.entete h1 {
+  font: 700 40px/1.15 var(--feutre); color: var(--creme);
+  text-shadow: 3px 4px 0 var(--encre); margin: 40px 0 22px;
+}
+.entete h1:has(+ .maj) { margin-bottom: 6px; }
+.maj { color: rgba(246, 239, 224, .7); margin: 0 0 34px; font-size: 15px; }
+.bloc { margin-bottom: 8px; }
+.contact-zone { text-align: center; margin: 0 0 34px; }
+.contact-zone p { color: rgba(246, 239, 224, .85); max-width: 32em; margin: 0 auto 22px; }
+.contact-zone .astuce { font-size: 15px; color: rgba(246, 239, 224, .7); margin-top: 18px; }
+
+/* Les planches de la scène, en bas de chaque page */
+.planches {
+  margin-top: 80px; padding: 34px 0 44px;
+  background: linear-gradient(#4d2b1a, #241208);
+  border-top: 2px solid rgba(224, 176, 74, .5);
+}
+.planches p { margin: 0 0 10px; }
+.reseaux { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0 0 22px; }
+.liens { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0 0 26px; padding: 0; list-style: none; }
+.signature { font: 700 13px/1 var(--feutre); letter-spacing: 3px; color: rgba(246, 239, 224, .5); margin: 0; }
+
+/* Le rideau qui s'ouvre au chargement de l'accueil */
+.ouverture { position: fixed; inset: 0; z-index: 10; pointer-events: none; display: flex; }
+.ouverture span {
+  flex: 1;
+  background: repeating-linear-gradient(90deg, var(--velours-sombre) 0 22px, var(--velours) 22px 44px);
+}
+.ouverture span:first-child { border-right: 3px solid var(--or); animation: ouvrir-g 1.3s .35s ease-in-out forwards; }
+.ouverture span:last-child { border-left: 3px solid var(--or); animation: ouvrir-d 1.3s .35s ease-in-out forwards; }
+@keyframes ouvrir-g { to { transform: translateX(-102%); } }
+@keyframes ouvrir-d { to { transform: translateX(102%); } }
+@media (prefers-reduced-motion: reduce) {
+  .ouverture { display: none; }
+}
+
+@media (max-width: 600px) {
+  body { font-size: 16px; }
+  .rideau { width: 10px; }
+  .scene { padding: 0 26px; }
+  .lambrequin { height: 44px; }
+  .scene > h2, .bloc > h2 { font-size: 26px; margin-top: 56px; }
+  .ticket { grid-template-columns: 44px 1fr; gap: 2px 12px; padding: 16px 18px; }
+  .numero { font-size: 28px; }
+  .fiche { padding: 22px 20px; }
+  .entete h1 { font-size: 32px; }
+  .accroche { font-size: 17px; }
+}
+</style>
+</head>
+<body>
+<div class="ouverture" aria-hidden="true"><span></span><span></span></div>
+<div class="rideau rideau-g" aria-hidden="true"></div>
+<div class="rideau rideau-d" aria-hidden="true"></div>
+<svg class="lambrequin" viewBox="0 0 700 64" preserveAspectRatio="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="velours" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a121a"/><stop offset="1" stop-color="#b32129"/>
+    </linearGradient>
+  </defs>
+  <path d="M0 0H700V30Q650 74 600 30Q550 74 500 30Q450 74 400 30Q350 74 300 30Q250 74 200 30Q150 74 100 30Q50 74 0 30Z"
+        fill="url(#velours)" stroke="#e0b04a" stroke-width="3" vector-effect="non-scaling-stroke"/>
+</svg>
+<main class="scene">
+  <header class="affiche-zone">
+    <p class="surtitre">La troupe présente…</p>
+    <div class="pile">
+      <div class="affiche">
+        <span class="punaise punaise-g" aria-hidden="true"></span>
+        <span class="punaise punaise-d" aria-hidden="true"></span>
+        <span class="ce-soir">★ Ce soir ★</span>
+        <h1 class="titre" aria-label="Gestimo"><span>G</span><span>e</span><span>s</span><span>t</span><span>i</span><span>m</span><span>o</span></h1>
+        <span class="ruban">Mots &amp; Gestes</span>
+        <span class="entree">Entrée libre</span>
+      </div>
+    </div>
+    <p class="actes-ligne">Décris · Un seul mot · Geste</p>
+    <p class="accroche">Le jeu de soirée où deux équipes font deviner les mêmes mots en trois actes, sur un seul téléphone.</p>
+    <span class="bouton-or bientot">Bientôt sur l'App Store</span>
+  </header>
+
+  <h2>Trois actes, les mêmes mots</h2>
+  <p class="intro">Les deux équipes se partagent un seul paquet de mots. À chaque acte, on le rejoue avec moins de moyens.</p>
+  <ol class="actes">
+    <li class="ticket acte-1">
+      <span class="numero" aria-hidden="true">I</span>
+      <h3>Acte I, Description</h3>
+      <p>Fais deviner avec toutes les phrases que tu veux, sans dire le mot, ni un mot de sa famille, ni sa traduction.</p>
+    </li>
+    <li class="ticket acte-2">
+      <span class="numero" aria-hidden="true">II</span>
+      <h3>Acte II, Un seul mot</h3>
+      <p>Les mêmes cartes reviennent. Cette fois, tu n'as droit qu'à un seul mot.</p>
+    </li>
+    <li class="ticket acte-3">
+      <span class="numero" aria-hidden="true">III</span>
+      <h3>Acte III, Geste</h3>
+      <p>Plus un mot : on mime, avec tout le corps.</p>
+    </li>
+    <li class="ticket acte-4">
+      <span class="numero" aria-hidden="true">IV</span>
+      <h3>Acte surprise</h3>
+      <p>Bruitage ou Statue, tiré au sort, avec les points doublés.</p>
+    </li>
+  </ol>
+
+  <h2>Au programme</h2>
+  <p class="intro">Tout ce qu'il faut pour une soirée en famille ou entre amis.</p>
+  <div class="fiche">
+    <ul class="programme">
+      <li><strong>350 mots pour toute la famille</strong>, dès 8 ans, et 50 mots de culture générale à partir de 12 ans.</li>
+      <li><strong>Jamais deux fois les mêmes</strong> : Gestimo se souvient des mots déjà joués et pioche d'abord les autres.</li>
+      <li><strong>Les mots secrets de la troupe</strong> : avant la partie, chacun glisse un mot dans le paquet, en cachette.</li>
+      <li><strong>Des cartes dorées à 3 points</strong>, deux jokers par équipe et un tirage au sort des équipes.</li>
+      <li><strong>Un seul téléphone</strong> qui passe de main en main, dès 4 joueurs, sans connexion internet.</li>
+      <li><strong>Pas de publicité</strong> pendant la partie.</li>
+    </ul>
+  </div>
+</main>
+<footer class="planches">
+  <div class="scene">
+    <p>Une question&nbsp;? Écris à <a href="mailto:contact@gestimoapp.com">contact@gestimoapp.com</a></p>
+    <p class="reseaux">
+      <a href="https://www.instagram.com/gestimo.app/">Instagram&nbsp;: @gestimo.app</a>
+      <a href="https://www.tiktok.com/@gestimo_app">TikTok&nbsp;: @gestimo_app</a>
+    </p>
+    <ul class="liens">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="assistance.html">Assistance</a></li>
+      <li><a href="confidentialite.html">Confidentialité</a></li>
+      <li><a href="mentions-legales.html">Mentions légales</a></li>
+    </ul>
+    <p class="signature">Gestimo, un jeu BAMIBIK</p>
+  </div>
+</footer>
+</body>
+</html>
